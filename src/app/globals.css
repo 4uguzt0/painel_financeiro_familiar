@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/* Paleta "caderneta": papel frio, tinta azul-marinho, verde-pinho para o que é guardado */
+:root {
+  --paper: #f2f5f2;
+  --sheet: #ffffff;
+  --ink: #17283a;
+  --ink-soft: #4f5e6b;
+  --ink-faint: #7d8a94;
+  --rule: #d6ddd8;
+  --pine: #1d6a50;
+  --pine-soft: #e2efe8;
+  --debit: #a8321f;
+  --debit-soft: #f6e5e1;
+  --amber: #8a5a00;
+  --amber-soft: #f6ecd6;
+  --focus: #2f6fd6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0f1720;
+    --sheet: #17212c;
+    --ink: #e5ebef;
+    --ink-soft: #a9b5bf;
+    --ink-faint: #7f8c97;
+    --rule: #2a3744;
+    --pine: #5cc39b;
+    --pine-soft: #183329;
+    --debit: #f08a76;
+    --debit-soft: #3a1f1a;
+    --amber: #e5b65a;
+    --amber-soft: #352a14;
+    --focus: #7aa7ff;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-pine: var(--pine);
+  --color-pine-soft: var(--pine-soft);
+  --color-debit: var(--debit);
+  --color-debit-soft: var(--debit-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --font-sans: "Schibsted Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
