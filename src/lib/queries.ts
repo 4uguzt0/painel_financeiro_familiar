@@ -2,7 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AccountKind, Category } from "@/types/db";
 
 // Contas do dia a dia primeiro: são as mais usadas nos lançamentos.
-const KIND_ORDER: Record<AccountKind, number> = { checking: 0, cash: 1, savings: 2, emergency: 3, investment: 4 };
+const KIND_ORDER: Record<AccountKind, number> = { checking: 0, credit_card: 1, cash: 2, savings: 3, emergency: 4, investment: 5 };
+
+export const isCard = (a: { kind: AccountKind }) => a.kind === "credit_card";
 
 export function sortAccounts<T extends { kind: AccountKind; name: string }>(list: T[]): T[] {
   return [...list].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || a.name.localeCompare(b.name, "pt-BR"));

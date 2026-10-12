@@ -17,7 +17,7 @@ quer dedicar. Este produto inverte isso: **poucos lançamentos, indicadores auto
 
 ## 3. Regras de uso (o "processo")
 - Lançar **valores consolidados**: "Mercado R$ 650", não cada item.
-- Cartão de crédito: lançar **por categoria quando a fatura fecha**, não cada compra.
+- Cartão de crédito é uma conta (v0.2): compra = despesa saindo do cartão; pagar fatura = transferência.
 - Fechamento semanal de ~15 minutos (domingo): conferir saldos das contas com o banco.
 
 ## 4. Requisitos funcionais (v0.1)
@@ -60,6 +60,12 @@ quer dedicar. Este produto inverte isso: **poucos lançamentos, indicadores auto
 6. Cartões: total a receber de terceiros · saldo a devolver à poupança
 7. Saldos por conta
 
+### RF8 — Cartões, gastos fixos e orçamento (v0.2 — entregue)
+- Tipo de conta "Cartão de crédito", tela de cartões, "Pagar fatura" com valor e contas preenchidos.
+- Gastos fixos: cadastro único, lista do mês com valores ajustáveis, "Lançar" em lote (1 por mês).
+- Orçamento mensal por categoria, economia prevista se cumprido, avisos no app em 80% e 100%
+  (no painel e logo após lançar uma despesa).
+
 ## 5. Requisitos não funcionais
 - Mobile-first e instalável (PWA). Bom em 380 px.
 - Isolamento total entre famílias (RLS) — testado.
@@ -67,7 +73,7 @@ quer dedicar. Este produto inverte isso: **poucos lançamentos, indicadores auto
 - Interface em pt-BR; valores em R$.
 
 ## 6. Fora do escopo da v0.1
-Metas, valor de mercado de investimentos, importação de extrato, orçamento por categoria,
+Metas, valor de mercado de investimentos, importação de extrato, avisos por e-mail,
 notificações, lançamento por WhatsApp/Telegram, IA, recuperação de senha. Ver `ROADMAP.md`.
 (Exportação CSV entrou na v0.1 como backup.)
 

@@ -45,7 +45,7 @@ test("casal: cadastro, lançamentos, empréstimos, convite e edição", async ({
   await page.locator("summary", { hasText: "Poupança" }).click();
   const poupForm = page.locator("details[open] form");
   await poupForm.getByLabel("Saldo inicial (R$)").fill("10.000,00");
-  await poupForm.getByRole("button", { name: "Salvar conta" }).click();
+  await poupForm.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByText("Conta atualizada.")).toBeVisible();
 
   // Receita e despesa

@@ -77,3 +77,46 @@ begin
             'self_loan_return', 60000, lid, cc, poup, 'Devolução: Notebook');
   end loop;
 end $$;
+
+-- v0.2: cartão de crédito, gastos fixos e orçamento (rode depois do bloco acima)
+do $$
+declare
+  v_email text := 'demo@exemplo.com';   -- << o mesmo e-mail de cima
+  hid uuid; cc uuid; card uuid; m date;
+begin
+  select household_id into hid from household_members hm join auth.users u on u.id = hm.user_id where u.email = v_email limit 1;
+  select id into cc from accounts where household_id = hid and name = 'Conta Augusto';
+  m := date_trunc('month', current_date)::date;
+
+  insert into accounts (household_id, name, kind, initial_balance_cents, opened_on)
+  values (hid, 'Cartão Nubank', 'credit_card', -84000, m - interval '1 month')
+  returning id into card;
+
+  -- Compras do mês no cartão (mercado e lazer passam a sair do cartão)
+  update transactions set from_account_id = card
+   where household_id = hid and occurred_on >= m
+     and description in ('Passeios e restaurantes', 'Streaming, internet e celular');
+  insert into transactions (household_id, occurred_on, type, amount_cents, description, category_id, from_account_id)
+  values (hid, least(m + 9, current_date), 'expense', 38600, 'Feira e açougue',
+          (select id from categories where household_id = hid and name = 'Mercado'), card);
+
+  -- Fatura do mês passado paga
+  insert into transactions (household_id, occurred_on, type, amount_cents, description, from_account_id, to_account_id)
+  values (hid, least(m + 2, current_date), 'transfer', 84000, null, cc, card);
+
+  -- Gastos fixos (aluguel e faculdade já lançados; internet pendente)
+  insert into recurring_expenses (household_id, name, amount_cents, category_id, account_id, day_of_month) values
+    (hid, 'Aluguel e condomínio', 240000, (select id from categories where household_id = hid and name = 'Moradia'), cc, 5),
+    (hid, 'Faculdade (ADS)',       65000, (select id from categories where household_id = hid and name = 'Educação'), cc, 10),
+    (hid, 'Luz',                   18000, (select id from categories where household_id = hid and name = 'Moradia'), cc, 20),
+    (hid, 'Internet e celular',    18900, (select id from categories where household_id = hid and name = 'Assinaturas'), card, 25);
+  update transactions t set recurring_id = r.id
+    from recurring_expenses r
+   where r.household_id = hid and t.household_id = hid and t.occurred_on >= m
+     and t.description = r.name and t.description in ('Aluguel e condomínio', 'Faculdade (ADS)');
+
+  -- Orçamento mensal
+  insert into budgets (household_id, category_id, amount_cents)
+  select hid, id, v from (values ('Mercado', 210000), ('Lazer', 120000), ('Transporte', 100000), ('Saúde', 50000), ('Moradia', 310000)) b(n, v)
+  join categories c on c.household_id = hid and c.name = b.n;
+end $$;

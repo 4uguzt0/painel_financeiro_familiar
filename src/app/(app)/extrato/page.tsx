@@ -25,7 +25,11 @@ const FILTER_TYPES: Record<Filter, TransactionType[] | null> = {
   movimentos: ["transfer", "loan_out", "loan_in", "self_loan_out", "self_loan_return"],
 };
 
-export default async function StatementPage({ searchParams }: { searchParams: Promise<{ mes?: string; filtro?: string }> }) {
+export default async function StatementPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mes?: string; filtro?: string; conta?: string }>;
+}) {
   const sp = await searchParams;
   const month = isValidMonth(sp.mes) ? sp.mes : currentMonth();
   const filter: Filter = (FILTERS.find((f) => f.value === sp.filtro)?.value ?? "todos") as Filter;
@@ -41,8 +45,12 @@ export default async function StatementPage({ searchParams }: { searchParams: Pr
     .order("created_at", { ascending: false });
   const types = FILTER_TYPES[filter];
   if (types) q = q.in("type", types);
+  const accountFilter = sp.conta && /^[0-9a-f-]{36}$/i.test(sp.conta) ? sp.conta : null;
+  if (accountFilter) q = q.or(`from_account_id.eq.${accountFilter},to_account_id.eq.${accountFilter}`);
 
   const [{ data }, { allAccounts, categories }] = await Promise.all([q, getFormOptions(supabase)]);
+  const filteredAccount = accountFilter ? allAccounts.find((a) => a.id === accountFilter) : null;
+  const cardIds = new Set(allAccounts.filter((a) => a.kind === "credit_card").map((a) => a.id));
   const rows = (data ?? []) as Transaction[];
   const accName = new Map(allAccounts.map((a) => [a.id, a.name]));
   const catName = new Map(categories.map((c) => [c.id, c.name]));
@@ -53,11 +61,22 @@ export default async function StatementPage({ searchParams }: { searchParams: Pr
   const days = new Map<string, Transaction[]>();
   for (const r of rows) days.set(r.occurred_on, [...(days.get(r.occurred_on) ?? []), r]);
   const today = todayISO();
-  const href = (m: string, f: Filter = filter) => `/extrato?mes=${m}${f !== "todos" ? `&filtro=${f}` : ""}`;
+  const href = (m: string, f: Filter = filter) =>
+    `/extrato?mes=${m}${f !== "todos" ? `&filtro=${f}` : ""}${accountFilter ? `&conta=${accountFilter}` : ""}`;
 
   return (
     <>
       <PageHeader title="Extrato" />
+      {filteredAccount && (
+        <div className="-mt-2 mb-4 flex items-center justify-between rounded-xl bg-rule/50 px-3.5 py-2 text-sm">
+          <span>
+            Só <strong className="font-semibold">{filteredAccount.name}</strong>
+          </span>
+          <Link href={`/extrato?mes=${month}`} className="font-medium text-ink-soft underline underline-offset-2">
+            Ver tudo
+          </Link>
+        </div>
+      )}
 
       <div className="mb-4 flex items-center justify-between">
         <Link href={href(shiftMonth(month, -1))} className="grid size-10 place-items-center rounded-full hover:bg-rule/50" aria-label="Mês anterior">
@@ -111,7 +130,7 @@ export default async function StatementPage({ searchParams }: { searchParams: Pr
               <h2 className="mb-2 px-1 text-sm font-medium text-ink-soft first-letter:uppercase">{dayHeading(day, today)}</h2>
               <Sheet className="divide-y divide-rule">
                 {items.map((t) => (
-                  <Row key={t.id} t={t} accName={accName} catName={catName} />
+                  <Row key={t.id} t={t} accName={accName} catName={catName} cardIds={cardIds} />
                 ))}
               </Sheet>
             </section>
@@ -122,10 +141,24 @@ export default async function StatementPage({ searchParams }: { searchParams: Pr
   );
 }
 
-function Row({ t, accName, catName }: { t: Transaction; accName: Map<string, string>; catName: Map<string, string> }) {
+function Row({
+  t,
+  accName,
+  catName,
+  cardIds,
+}: {
+  t: Transaction;
+  accName: Map<string, string>;
+  catName: Map<string, string>;
+  cardIds: Set<string>;
+}) {
   const from = t.from_account_id ? accName.get(t.from_account_id) : null;
   const to = t.to_account_id ? accName.get(t.to_account_id) : null;
-  const title = t.description || (t.category_id ? catName.get(t.category_id) : null) || TYPE_LABEL[t.type];
+  const isBillPayment = t.type === "transfer" && !!t.to_account_id && cardIds.has(t.to_account_id);
+  const title =
+    t.description ||
+    (t.category_id ? catName.get(t.category_id) : null) ||
+    (isBillPayment ? "Pagamento de fatura" : TYPE_LABEL[t.type]);
 
   let sub: string;
   if (t.type === "income") sub = `${catName.get(t.category_id!) ?? "Receita"} · ${to}`;

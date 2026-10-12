@@ -5,7 +5,7 @@
 
 ![CI](https://img.shields.io/badge/CI-lint%20·%20testes%20·%20build-brightgreen)
 ![stack](https://img.shields.io/badge/stack-Next.js%2015%20%7C%20Supabase%20%7C%20Postgres-blue)
-![testes](https://img.shields.io/badge/testes-34%20SQL%20·%2018%20unit%20·%204%20E2E-brightgreen)
+![testes](https://img.shields.io/badge/testes-59%20SQL%20·%2020%20unit%20·%205%20E2E-brightgreen)
 
 <p>
   <img src="docs/screenshots/painel.png" width="200" alt="Painel com taxa de poupança de 22% e patrimônio de R$ 47 mil">
@@ -14,7 +14,7 @@
   <img src="docs/screenshots/emprestimo.png" width="200" alt="Detalhe de um autoempréstimo da poupança">
 </p>
 
-**Demo:** `https://<seu-app>.vercel.app` · **Publicar o seu:** [guia passo a passo](docs/GUIA-PUBLICACAO.md)
+**Demo:** `https://<seu-app>.vercel.app` · **Publicar o seu:** [guia passo a passo](docs/GUIA-PUBLICACAO.md) · **Atualizar para a v0.2:** [guia](docs/GUIA-ATUALIZACAO-V02.md)
 
 ## O problema
 
@@ -34,6 +34,9 @@ automáticos** — e responde cinco perguntas:
 - **Lançamento rápido** (valor → categoria → conta → salvar) pensado para o celular
 - **Saldos calculados**, nunca digitados: saldo inicial + entradas − saídas
 - Empréstimos a terceiros e **autoempréstimos** com parcelas, status e histórico
+- **Cartões de crédito** como contas: gasto do mês, fatura a pagar e "Pagar fatura" em um toque
+- **Gastos fixos**: cadastrados uma vez, lançados todo mês com valores ajustáveis
+- **Orçamento por categoria**: economia prevista se o orçamento for cumprido e avisos em 80% e 100%
 - Painel com taxa de poupança em destaque, evolução do patrimônio (12 meses) e gastos por categoria
 - Extrato mensal com filtros, edição e exclusão
 - **Exportação CSV** (backup e base para análises)
@@ -46,7 +49,7 @@ flowchart LR
   U[Celular / navegador<br/>PWA] --> N[Next.js 15<br/>Server Components + Server Actions]
   N -->|supabase-js + JWT do usuário| S[(Supabase Postgres)]
   S --- R[RLS por família]
-  S --- V[Views de indicadores<br/>v_dashboard_summary · v_net_worth_monthly<br/>v_monthly_cashflow · v_loan_status ...]
+  S --- V[Views de indicadores<br/>v_dashboard_summary · v_net_worth_monthly<br/>v_budget_summary · v_card_summary · v_recurring_month ...]
   S --- F[Funções SQL<br/>create_household · join_household · create_loan]
 ```
 
@@ -74,9 +77,9 @@ Zod · Vitest · Playwright · GitHub Actions · Vercel
 
 | Camada | O que cobre | Comando |
 |---|---|---|
-| **SQL** (34) | Saldos, taxa de poupança, patrimônio, status de empréstimo, lançamentos inválidos bloqueados, isolamento entre famílias (RLS), atomicidade | `npm run test:db` |
-| **Unitários** (18) | Conversão de dinheiro pt-BR ↔ centavos, datas no fuso de Brasília | `npm test` |
-| **Ponta a ponta** (4) | O casal inteiro: cadastro → família → lançamentos → empréstimos → convite → edição → exclusão | `npm run test:e2e` |
+| **SQL** (59) | Saldos, taxa de poupança, patrimônio, empréstimos, cartões, gastos fixos (1 por mês), orçamento e economia prevista, lançamentos inválidos bloqueados, isolamento entre famílias (RLS) | `npm run test:db` |
+| **Unitários** (20) | Conversão de dinheiro pt-BR ↔ centavos, datas no fuso de Brasília, faixas de alerta do orçamento | `npm test` |
+| **Ponta a ponta** (5) | O casal inteiro (cadastro → empréstimos → convite → edição) e o fluxo cartão → pagar fatura → fixos → orçamento → avisos | `npm run test:e2e` |
 
 O CI roda lint, testes unitários, build e testes SQL a cada push.
 
@@ -113,8 +116,8 @@ docs/               PRD, modelo de dados, roadmap, guia de publicação
 
 ## Roadmap
 
-v0.1 (este) está completo. Próximos: metas com projeção de data, valor de mercado dos investimentos,
-importação de extrato e um notebook de análise exploratória sobre o CSV exportado.
+v0.1 e v0.2 (cartões, gastos fixos, orçamento) estão completos. Próximos: avisos por e-mail, metas com
+projeção de data, importação de extrato e um notebook de análise exploratória sobre o CSV exportado.
 Veja [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Autor

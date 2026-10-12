@@ -8,7 +8,8 @@ import { ChipGroup, FormError, Input, Segmented, Select, SubmitButton } from "@/
 import { cx } from "@/lib/cx";
 
 type Kind = "expense" | "income" | "transfer";
-type AccountOpt = { id: string; name: string };
+type AccountOpt = { id: string; name: string; kind?: string };
+export type TransactionPreset = { type?: Kind; toAccountId?: string; amountCents?: number };
 
 const LAST_ACCOUNT_KEY = "caderneta:last-account";
 
@@ -32,24 +33,27 @@ export function TransactionForm({
   accounts,
   today,
   initial,
+  preset,
 }: {
   categories: Category[];
   accounts: AccountOpt[];
   today: string;
   initial?: Transaction;
+  preset?: TransactionPreset;
 }) {
   const [state, action] = useActionState(saveTransaction, undefined);
   const isEdit = !!initial;
 
-  const [kind, setKind] = useState<Kind>((initial?.type as Kind) ?? "expense");
-  const [amount, setAmount] = useState(() =>
-    initial ? { text: formatAmount(initial.amount_cents), cents: initial.amount_cents } : { text: "", cents: 0 },
-  );
+  const [kind, setKind] = useState<Kind>((initial?.type as Kind) ?? preset?.type ?? "expense");
+  const [amount, setAmount] = useState(() => {
+    const cents = initial?.amount_cents ?? preset?.amountCents;
+    return cents ? { text: formatAmount(cents), cents } : { text: "", cents: 0 };
+  });
   const [categoryId, setCategoryId] = useState(initial?.category_id ?? "");
   const [accountId, setAccountId] = useState(
     (initial?.type === "income" ? initial.to_account_id : initial?.from_account_id) ?? accounts[0]?.id ?? "",
   );
-  const [toAccountId, setToAccountId] = useState(initial?.to_account_id ?? "");
+  const [toAccountId, setToAccountId] = useState(initial?.to_account_id ?? preset?.toAccountId ?? "");
   const [date, setDate] = useState(initial?.occurred_on ?? today);
   const [description, setDescription] = useState(initial?.description ?? "");
   const amountRef = useRef<HTMLInputElement>(null);
@@ -58,8 +62,14 @@ export function TransactionForm({
   useEffect(() => {
     if (isEdit) return;
     const last = readLast();
-    if (last && accounts.some((a) => a.id === last)) setAccountId(last);
-  }, [isEdit, accounts]);
+    const target = preset?.toAccountId;
+    if (last && last !== target && accounts.some((a) => a.id === last)) setAccountId(last);
+    else if (target) {
+      // Pagamento de fatura: origem padrão = primeira conta que não é cartão
+      const from = accounts.find((a) => a.id !== target && a.kind !== "credit_card");
+      if (from) setAccountId(from.id);
+    }
+  }, [isEdit, accounts, preset?.toAccountId]);
 
   // Depois de salvar: limpa valor/categoria/descrição e volta o foco ao valor
   useEffect(() => {
@@ -163,7 +173,9 @@ export function TransactionForm({
             </Select>
           </div>
           <p className="col-span-2 text-xs text-ink-faint">
-            Use para guardar na poupança, aplicar ou resgatar investimentos. Não conta como gasto.
+            {accounts.find((a) => a.id === toAccountId)?.kind === "credit_card"
+              ? "Pagamento de fatura: as compras já entraram como gasto, então isso não conta de novo."
+              : "Use para guardar na poupança, aplicar ou resgatar investimentos. Não conta como gasto."}
           </p>
         </div>
       ) : (
@@ -195,6 +207,15 @@ export function TransactionForm({
       {state?.ok && state.message && (
         <p role="status" className="rounded-xl bg-pine-soft px-3.5 py-2.5 text-sm font-medium text-pine">
           {state.message} Pode lançar a próxima.
+        </p>
+      )}
+      {state?.ok && state.warning && (
+        <p role="alert" data-testid="budget-warning" className="flex gap-2 rounded-xl bg-amber-soft px-3.5 py-2.5 text-sm font-medium text-amber">
+          <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden className="mt-px shrink-0">
+            <path d="M10 3.5l7 12.5H3L10 3.5z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+            <path d="M10 8.5v3.2M10 14h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+          <span>{state.warning}</span>
         </p>
       )}
 

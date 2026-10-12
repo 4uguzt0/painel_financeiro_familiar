@@ -33,9 +33,17 @@ o mínimo de lançamentos. O indicador principal é a **taxa de poupança mensal
 6. Interface em **português do Brasil**, datas `dd/mm/aaaa`, moeda `R$`.
    Código, nomes de tabelas, variáveis e commits em **inglês**.
 7. Mobile-first: tudo precisa funcionar bem em 380 px de largura.
+8. **Cartão de crédito é uma conta** (`kind = 'credit_card'`) com saldo negativo = dívida.
+   Compra = `expense` saindo do cartão; pagar fatura = `transfer` conta → cartão. Nunca criar
+   categoria "Cartão". Em SQL, compare `kind::text = 'credit_card'` (valor de enum novo).
+9. Migrations de produção são aplicadas **antes** do deploy do código e devem ser **aditivas**
+   (o app em produção precisa continuar funcionando com o banco novo).
 
 ## Convenções
 - Tipos do banco escritos à mão em `src/types/db.ts` — atualize junto com cada migration.
+- v0.2: `recurring_expenses` (+ `transactions.recurring_id`, único por mês), `budgets` (limite mensal
+  por categoria), views `v_card_summary`, `v_recurring_month`, `v_budget_status`, `v_budget_summary`.
+  Faixas de alerta do orçamento em `src/lib/budget.ts` (80% aviso, 100% estouro).
 - Estrutura: `src/app/(app)/<rota>` (telas logadas), `src/actions/*.ts` (Server Actions),
   `src/components/`, `src/lib/` (money, dates, session, errors, queries).
 - `getSession()` (src/lib/session.ts) devolve supabase + usuário + família; use em toda tela/ação logada.

@@ -1,6 +1,6 @@
 // Tipos das tabelas e views usadas pelo app (espelham supabase/migrations).
 
-export type AccountKind = "checking" | "savings" | "emergency" | "investment" | "cash";
+export type AccountKind = "checking" | "credit_card" | "savings" | "emergency" | "investment" | "cash";
 export type CategoryKind = "income" | "expense";
 export type LoanKind = "third_party" | "self";
 export type TransactionType =
@@ -37,6 +37,64 @@ export interface Category {
   archived: boolean;
 }
 
+export interface CardSummary {
+  account_id: string;
+  name: string;
+  archived: boolean;
+  balance_cents: number;
+  owed_cents: number;
+  month_spent_cents: number;
+}
+
+export interface RecurringExpense {
+  id: string;
+  name: string;
+  amount_cents: number;
+  category_id: string;
+  account_id: string;
+  day_of_month: number;
+  active: boolean;
+}
+
+export interface RecurringMonth {
+  recurring_id: string;
+  name: string;
+  amount_cents: number;
+  category_id: string;
+  category: string;
+  account_id: string;
+  account: string;
+  day_of_month: number;
+  due_on: string;
+  transaction_id: string | null;
+  launched_cents: number | null;
+  launched_on: string | null;
+}
+
+export interface BudgetStatus {
+  category_id: string;
+  category: string;
+  budget_cents: number;
+  spent_cents: number;
+  used_ratio: number;
+  remaining_cents: number;
+}
+
+export interface BudgetSummary {
+  total_budget_cents: number;
+  budgeted_spent_cents: number;
+  over_budget_cents: number;
+  categories_warning: number;
+  categories_over: number;
+  month_spent_cents: number;
+  unbudgeted_spent_cents: number;
+  income_ref_cents: number;
+  income_is_estimate: boolean;
+  planned_savings_cents: number;
+  planned_savings_rate: number | null;
+  month_progress: number;
+}
+
 export interface Transaction {
   id: string;
   household_id: string;
@@ -48,6 +106,7 @@ export interface Transaction {
   from_account_id: string | null;
   to_account_id: string | null;
   loan_id: string | null;
+  recurring_id?: string | null;
 }
 
 export interface LoanStatus {
@@ -76,6 +135,7 @@ export interface DashboardSummary {
 
 export const ACCOUNT_KIND_LABEL: Record<AccountKind, string> = {
   checking: "Conta corrente",
+  credit_card: "Cartão de crédito",
   savings: "Poupança",
   emergency: "Reserva de emergência",
   investment: "Investimentos",

@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { friendlyAuthError } from "@/lib/errors";
 
 /** Retorno padrão das Server Actions de formulário. `at` muda a cada sucesso (útil para limpar o form). */
-export type FormState = { error?: string; ok?: boolean; message?: string; at?: number } | undefined;
+export type FormState = { error?: string; ok?: boolean; message?: string; warning?: string; at?: number } | undefined;
 
 const credentials = z.object({
   email: z.string().trim().toLowerCase().email("Digite um e-mail válido."),

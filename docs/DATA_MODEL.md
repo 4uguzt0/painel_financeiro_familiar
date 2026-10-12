@@ -1,7 +1,8 @@
 # Modelo de dados
 
 Schema: [`20261008000001_init.sql`](../supabase/migrations/20261008000001_init.sql) (tabelas, regras, RLS, views) e
-[`20261009000001_app_support.sql`](../supabase/migrations/20261009000001_app_support.sql) (`create_loan`, lista de membros, fuso horário).
+[`20261009000001_app_support.sql`](../supabase/migrations/20261009000001_app_support.sql) (`create_loan`, lista de membros, fuso horário) e
+[`20261012000001_cards_recurring_budgets.sql`](../supabase/migrations/20261012000001_cards_recurring_budgets.sql) (cartões, gastos fixos, orçamento).
 
 ## Diagrama
 
@@ -16,6 +17,10 @@ erDiagram
   accounts   ||--o{ transactions : "from / to"
   categories ||--o{ transactions : classifica
   loans      ||--o{ transactions : "concessão / parcelas"
+  households ||--o{ recurring_expenses : possui
+  households ||--o{ budgets : possui
+  recurring_expenses ||--o{ transactions : "lançado (1 por mês)"
+  categories ||--o| budgets : "limite mensal"
 
   accounts {
     uuid id PK
@@ -78,6 +83,20 @@ Patrimônio líquido = soma dos saldos das contas + empréstimos a receber de te
 Autoempréstimo **não** altera o patrimônio (o dinheiro só trocou de conta); ele mede
 disciplina: quanto a poupança está "devendo".
 
+## Cartões, gastos fixos e orçamento (v0.2)
+
+- **Cartão de crédito** é uma conta (`kind = 'credit_card'`) cujo saldo fica negativo: é a dívida.
+  Compra = despesa saindo do cartão. Pagar fatura = transferência da conta para o cartão (não é gasto).
+  O patrimônio já desconta a dívida no momento da compra. `v_card_summary`: a pagar e gasto no mês.
+- **Gastos fixos** (`recurring_expenses`): nome, valor, categoria, conta e dia do vencimento (31 vira o último
+  dia do mês). Ao lançar, cada transação recebe `recurring_id`; um índice único garante **um lançamento por
+  fixo por mês**. Excluir o fixo preserva os lançamentos já feitos (`on delete set null`).
+  `v_recurring_month`: situação de cada fixo no mês corrente.
+- **Orçamento** (`budgets`): limite mensal por categoria de despesa, válido para todos os meses.
+  `v_budget_status`: usado, restante e proporção por categoria. `v_budget_summary`: totais, categorias em
+  alerta/estouradas e **economia prevista** = renda de referência − orçamento total − gastos sem orçamento
+  (renda do mês, ou do mês anterior enquanto as receitas do mês não forem lançadas).
+
 ## Integridade e segurança
 
 - **FKs compostas** `(household_id, id)`: um lançamento não consegue apontar para conta,
@@ -92,6 +111,7 @@ disciplina: quanto a poupança está "devendo".
 
 ## Testes
 
-`supabase/tests/*_test.sql` cobrem 34 cenários: saldos, status de empréstimo,
-taxa de poupança, patrimônio, lançamentos inválidos bloqueados, isolamento entre famílias,
+`supabase/tests/*_test.sql` cobrem 59 cenários: saldos, status de empréstimo,
+taxa de poupança, patrimônio, cartões e pagamento de fatura, gastos fixos (unicidade mensal),
+orçamento e economia prevista, lançamentos inválidos bloqueados, isolamento entre famílias,
 atomicidade do `create_loan` e cascade na exclusão.

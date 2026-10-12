@@ -6,6 +6,8 @@ import { z } from "zod";
 import { getSession } from "@/lib/session";
 import { friendlyError } from "@/lib/errors";
 import { formatBRL } from "@/lib/money";
+import { budgetMessage } from "@/lib/budget";
+import { currentMonth } from "@/lib/dates";
 import type { FormState } from "./auth";
 
 const uuid = z.string().uuid();
@@ -61,6 +63,8 @@ export async function saveTransaction(_: FormState, form: FormData): Promise<For
     category_id: v.type === "transfer" ? null : v.category_id,
     from_account_id: v.type === "income" ? null : v.account_id,
     to_account_id: v.type === "income" ? v.account_id : v.type === "transfer" ? v.to_account_id : null,
+    // Só despesa pode estar ligada a um gasto fixo
+    ...(v.type !== "expense" ? { recurring_id: null } : {}),
   };
 
   const { error } = v.id
@@ -70,7 +74,18 @@ export async function saveTransaction(_: FormState, form: FormData): Promise<For
 
   revalidatePath("/", "layout");
   if (v.id) redirect(`/extrato?mes=${v.occurred_on.slice(0, 7)}`);
-  return { ok: true, at: Date.now(), message: `${verb[v.type]} de ${formatBRL(v.amount_cents)} salva.` };
+
+  // Aviso de orçamento: depois de uma despesa, confere como ficou a categoria no mês
+  let warning: string | undefined;
+  if (v.type === "expense" && v.category_id && v.occurred_on.slice(0, 7) === currentMonth()) {
+    const { data: b } = await supabase
+      .from("v_budget_status")
+      .select("category, budget_cents, spent_cents")
+      .eq("category_id", v.category_id)
+      .maybeSingle();
+    if (b) warning = budgetMessage(b.category, b.budget_cents, b.spent_cents) ?? undefined;
+  }
+  return { ok: true, at: Date.now(), message: `${verb[v.type]} de ${formatBRL(v.amount_cents)} salva.`, warning };
 }
 
 export async function deleteTransaction(id: string, backTo = "/extrato") {

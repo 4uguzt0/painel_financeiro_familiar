@@ -4,6 +4,7 @@ import { sortAccounts } from "@/lib/queries";
 import { formatBRL } from "@/lib/money";
 import { todayISO } from "@/lib/dates";
 import { ACCOUNT_KIND_LABEL, type Account, type AccountBalance } from "@/types/db";
+import Link from "next/link";
 import { PageHeader, Sheet } from "@/components/ui";
 import { AccountForm, ArchiveButton } from "./account-forms";
 
@@ -12,7 +13,7 @@ export const metadata: Metadata = { title: "Contas" };
 export default async function AccountsPage() {
   const { supabase } = await getSession();
   const [{ data: accounts }, { data: balances }] = await Promise.all([
-    supabase.from("accounts").select("*"),
+    supabase.from("accounts").select("*").neq("kind", "credit_card"),
     supabase.from("v_account_balances").select("account_id, balance_cents"),
   ]);
   const balanceOf = new Map((balances as Pick<AccountBalance, "account_id" | "balance_cents">[] | null)?.map((b) => [b.account_id, b.balance_cents]));
@@ -26,6 +27,11 @@ export default async function AccountsPage() {
       <PageHeader title="Contas" back="/mais" />
       <p className="-mt-2 mb-5 text-sm text-ink-soft">
         O saldo é calculado: saldo inicial + tudo que entrou − tudo que saiu. Para começar, informe em cada conta o saldo de hoje no banco.
+        Cartões de crédito ficam em{" "}
+        <Link href="/mais/cartoes" className="font-medium text-ink underline underline-offset-2">
+          Cartões
+        </Link>
+        .
       </p>
 
       <Sheet className="divide-y divide-rule">
@@ -41,7 +47,7 @@ export default async function AccountsPage() {
             <div className="border-t border-rule bg-paper/60 px-4 py-4">
               <AccountForm account={a} />
               <div className="mt-2">
-                <ArchiveButton id={a.id} archived={false} />
+                <ArchiveButton id={a.id} archived={false} label="Arquivar conta" />
               </div>
             </div>
           </details>

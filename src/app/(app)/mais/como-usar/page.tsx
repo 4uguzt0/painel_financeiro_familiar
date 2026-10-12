@@ -9,8 +9,16 @@ const rules = [
     text: "Foi ao mercado? Um lançamento: “Mercado R$ 650”. Pão, leite e refrigerante não precisam de linha própria.",
   },
   {
-    title: "Cartão de crédito: lance quando a fatura fechar",
-    text: "Em vez de cada compra, some a fatura por categoria e lance como despesas saindo da conta que paga a fatura.",
+    title: "Cartão de crédito é uma conta",
+    text: "Cadastre cada cartão em Mais → Cartões. Compra no cartão = despesa saindo do cartão. Pagar a fatura = botão “Pagar fatura” (uma transferência da conta para o cartão, que não conta como gasto de novo).",
+  },
+  {
+    title: "Gastos fixos: cadastre uma vez, lance o mês num toque",
+    text: "Aluguel, contas e assinaturas ficam em Mais → Gastos fixos. Quando pagar, confira os valores e toque em “Lançar”.",
+  },
+  {
+    title: "Orçamento: um limite por categoria",
+    text: "Em Mais → Orçamento, defina quanto querem gastar por mês. O app mostra quanto vão guardar se cumprirem e avisa ao chegar em 80% e 100%.",
   },
   {
     title: "Guardar dinheiro é transferência",
@@ -31,7 +39,7 @@ export default function HowToPage() {
     <>
       <PageHeader title="Como usar" back="/mais" />
       <p className="mb-5 text-ink-soft">
-        O app foi feito para pedir pouco. Cinco combinados mantêm os números certos sem virar trabalho.
+        O app foi feito para pedir pouco. Estes combinados mantêm os números certos sem virar trabalho.
       </p>
       <ol className="flex flex-col gap-3">
         {rules.map((r, i) => (

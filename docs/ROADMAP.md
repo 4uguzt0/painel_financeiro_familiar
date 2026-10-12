@@ -19,7 +19,18 @@ que qualquer item abaixo.
 
 ---
 
-## v0.2 — Mais visão
+## ✅ v0.2 — Cartões, gastos fixos e orçamento (entregue)
+
+- [x] Cartão de crédito como tipo de conta: tela Cartões, gasto do mês, a pagar, "Pagar fatura"
+- [x] Gastos fixos: cadastro, lista do mês com valores ajustáveis, lançar em lote (1 por mês)
+- [x] Orçamento por categoria: economia prevista, ritmo do mês, avisos em 80% e 100%
+- [x] Avisos dentro do app: no painel e logo após lançar uma despesa
+- [x] Testes: 59 SQL, 20 unitários, 5 ponta a ponta
+- [x] Guia de atualização (`docs/GUIA-ATUALIZACAO-V02.md`)
+
+---
+
+## v0.3 — Mais visão
 
 Cada item cabe em 1–2 semanas com ~4 h/semana. Cole o prompt no Claude Code, dentro da pasta do projeto.
 
@@ -49,11 +60,11 @@ Cada item cabe em 1–2 semanas com ~4 h/semana. Cole o prompt no Claude Code, d
 
 > **Prompt:** Crie a pasta analytics/ com um notebook Jupyter que lê o CSV exportado pelo app (formato em src/app/exportar/route.ts) e faz uma análise exploratória: gastos por categoria ao longo do tempo, taxa de poupança móvel de 3 meses e uma projeção simples de patrimônio. Use dados fictícios gerados a partir de supabase/demo-data.sql e explique cada gráfico em português.
 
-## v0.3 — Conveniência
+## v0.4 — Conveniência
+- [ ] Avisos de orçamento por e-mail (Resend + rotina diária: Vercel Cron ou Supabase pg_cron)
 - [ ] "Esqueci minha senha" (requer SMTP próprio no Supabase, ex.: Resend)
 - [ ] Lançamento por Telegram com IA ("mercado 57", "emprestei 500 pro João")
 - [ ] Resumo mensal por e-mail
-- [ ] Orçamento por categoria com alerta
 
 ## Ideias (fora do escopo por enquanto)
 -

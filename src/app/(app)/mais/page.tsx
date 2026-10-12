@@ -7,6 +7,9 @@ import { PageHeader, Sheet } from "@/components/ui";
 export const metadata: Metadata = { title: "Mais" };
 
 const links = [
+  { href: "/mais/orcamento", title: "Orçamento", text: "Limite de gastos por categoria e economia prevista" },
+  { href: "/mais/fixos", title: "Gastos fixos", text: "Aluguel, contas e assinaturas: lance o mês em um toque" },
+  { href: "/mais/cartoes", title: "Cartões", text: "Gasto do mês, fatura a pagar, pagar fatura" },
   { href: "/mais/contas", title: "Contas", text: "Saldos, saldo inicial, arquivar contas" },
   { href: "/mais/categorias", title: "Categorias", text: "Receitas e despesas" },
   { href: "/mais/familia", title: "Família", text: "Membros e código de convite" },

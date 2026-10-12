@@ -12,7 +12,7 @@ import type { FormState } from "./auth";
 const accountSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().trim().min(1, "Dê um nome para a conta.").max(60),
-  kind: z.enum(["checking", "savings", "emergency", "investment", "cash"]),
+  kind: z.enum(["checking", "credit_card", "savings", "emergency", "investment", "cash"]),
   initial: z.string(),
   opened_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida."),
 });
@@ -27,17 +27,21 @@ export async function saveAccount(_: FormState, form: FormData): Promise<FormSta
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  const isCard = parsed.data.kind === "credit_card";
   const negative = String(parsed.data.initial).trim().startsWith("-");
-  const raw = String(parsed.data.initial).replace("-", "");
+  const raw = String(parsed.data.initial).replace(/[−-]/, "");
   const cents = raw.trim() === "" ? 0 : parseBRL(raw);
-  if (cents === null) return { error: "Saldo inicial inválido. Exemplo: 1.250,00" };
+  if (cents === null)
+    return { error: isCard ? "Valor da fatura inválido. Exemplo: 1.250,00" : "Saldo inicial inválido. Exemplo: 1.250,00" };
+  // Cartão: o usuário informa quanto DEVE (positivo); guardamos como saldo negativo.
+  const initial = isCard ? -cents : negative ? -cents : cents;
 
   const { supabase, householdId } = await getSession();
   const row = {
     household_id: householdId,
     name: parsed.data.name,
     kind: parsed.data.kind,
-    initial_balance_cents: negative ? -cents : cents,
+    initial_balance_cents: initial,
     opened_on: parsed.data.opened_on,
   };
   const { error } = parsed.data.id
